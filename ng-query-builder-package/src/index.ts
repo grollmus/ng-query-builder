@@ -1,1 +1,1 @@
-export * from './lib/ng-query-builder-package/ng-query-builder-package.component';
+export * from './lib/angular2-query-builder.module';
