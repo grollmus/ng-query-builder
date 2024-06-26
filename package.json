@@ -1,0 +1,12 @@
+{
+  "name": "ng-query-builder",
+  "version": "1.0.0",
+  "description": "A modernized Angular 4+ query builder based on jQuery QueryBuilder. Support for heavy customization with Angular components and provides a flexible way to handle custom data types.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Daniel Weiß <daniel.weiss@grollmus.de>",
+  "license": "ISC"
+}
