@@ -8,5 +8,9 @@
   },
   "keywords": [],
   "author": "Daniel Weiß <daniel.weiss@grollmus.de>",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nx": "19.3.2"
+  },
+  "nx": {}
 }
