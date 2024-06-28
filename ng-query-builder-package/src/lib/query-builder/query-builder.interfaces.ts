@@ -1,8 +1,7 @@
-
 export interface RuleSet {
   condition: string;
   rules: Array<RuleSet | Rule>;
-  collapsed?: boolean;
+  collapsed: boolean;
   isChild?: boolean;
 }
 
@@ -51,38 +50,40 @@ export interface Entity {
   defaultField?: any;
 }
 
-export type QueryBuilderClassName = 'arrowIconButton'
-                           | 'arrowIcon'
-                           | 'removeIcon'
-                           | 'addIcon'
-                           | 'button' 
-                           | 'buttonGroup' 
-                           | 'removeButton'  
-                           | 'removeButtonSize'
-                           | 'switchRow' 
-                           | 'switchGroup' 
-                           | 'switchLabel' 
-                           | 'switchRadio' 
-                           | 'switchControl' 
-                           | 'rightAlign' 
-                           | 'transition' 
-                           | 'collapsed' 
-                           | 'treeContainer' 
-                           | 'tree' 
-                           | 'row' 
-                           | 'connector' 
-                           | 'rule' 
-                           | 'ruleSet' 
-                           | 'invalidRuleSet' 
-                           | 'emptyWarning' 
-                           | 'fieldControl' 
-                           | 'fieldControlSize' 
-                           | 'entityControl' 
-                           | 'entityControlSize' 
-                           | 'operatorControl' 
-                           | 'operatorControlSize' 
-                           | 'inputControl' 
-                           | 'inputControlSize';
+export type QueryBuilderClassName =
+  | 'arrowIconButton'
+  | 'arrowIcon'
+  | 'removeIcon'
+  | 'addIcon'
+  | 'button'
+  | 'buttonGroup'
+  | 'removeButton'
+  | 'removeButtonSize'
+  | 'switchRow'
+  | 'switchGroup'
+  | 'switchLabel'
+  | 'switchRadio'
+  | 'switchControl'
+  | 'rightAlign'
+  | 'transition'
+  | 'collapsed'
+  | 'treeContainer'
+  | 'tree'
+  | 'row'
+  | 'connector'
+  | 'rule'
+  | 'ruleSet'
+  | 'invalidRuleSet'
+  | 'emptyWarning'
+  | 'fieldControl'
+  | 'fieldControlSize'
+  | 'entityControl'
+  | 'entityControlSize'
+  | 'operatorControl'
+  | 'operatorControlSize'
+  | 'inputControl'
+  | 'inputControlSize'
+  | 'clear-dummy';
 
 export interface QueryBuilderConfig {
   fields: FieldMap;
@@ -96,9 +97,11 @@ export interface QueryBuilderConfig {
   removeRuleSet?: (ruleset: RuleSet, parent: RuleSet) => void;
   removeRule?: (rule: Rule, parent: RuleSet) => void;
   coerceValueForOperator?: (operator: string, value: any, rule: Rule) => any;
-  calculateFieldChangeValue?: (currentField: Field,
-                               nextField: Field,
-                               currentValue: any) => any;
+  calculateFieldChangeValue?: (
+    currentField: Field,
+    nextField: Field,
+    currentValue: any
+  ) => any;
 }
 
 export interface SwitchGroupContext {

@@ -4,11 +4,13 @@ Hello World
     <i [ngClass]="getClassNames('arrowIcon')"></i>
   </ng-template>
 
-  <!-- <a
-    *ngIf="allowCollapse"
+  <a
+    *ngIf="allowCollapse()"
     (click)="toggleCollapse()"
-    [ngClass]="
-      getClassNames('arrowIconButton', data.collapsed ? 'collapsed' : '')
+    [class]="defaultClassNames.arrowIconButton"
+    [ngClass]="{
+      'q-collapsed': _data().collapsed,
+    }
     "
   >
     <ng-container
@@ -18,7 +20,7 @@ Hello World
         *ngTemplateOutlet="template; context: getArrowIconContext()"
       ></ng-container>
     </ng-container>
-  </a> -->
+  </a>
 
   <!-- <ng-container
     *ngIf="getButtonGroupTemplate() as template; else defaultButtonGroup"

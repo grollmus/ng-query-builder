@@ -1,33 +1,46 @@
-import {
-  NG_VALUE_ACCESSOR,
-  NG_VALIDATORS
-} from '@angular/forms';
+import { NG_VALUE_ACCESSOR, NG_VALIDATORS } from '@angular/forms';
 import {
   ChangeDetectorRef,
-  Component, forwardRef,
-  Input
+  Component,
+  ContentChild,
+  effect,
+  ElementRef,
+  forwardRef,
+  input,
+  Input,
+  signal,
+  TemplateRef,
+  ViewChild,
 } from '@angular/core';
-import { QueryBuilderClassName } from './query-builder.interfaces';
+import {
+  ArrowIconContext,
+  QueryBuilderClassName,
+  QueryBuilderConfig,
+  RuleSet,
+} from './query-builder.interfaces';
+import { QueryArrowIconDirective } from './query-arrow-icon.directive';
+import { cssMap } from './css.map';
 
 export const CONTROL_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
   useExisting: forwardRef(() => QueryBuilderComponent),
-  multi: true
+  multi: true,
 };
 
 export const VALIDATOR: any = {
   provide: NG_VALIDATORS,
   useExisting: forwardRef(() => QueryBuilderComponent),
-  multi: true
+  multi: true,
 };
 
 @Component({
   selector: 'query-builder',
   templateUrl: './query-builder.component.html',
   styleUrls: ['./query-builder.component.scss'],
-  providers: [CONTROL_VALUE_ACCESSOR, VALIDATOR]
+  providers: [CONTROL_VALUE_ACCESSOR, VALIDATOR],
 })
 export class QueryBuilderComponent {
+  #cssMap = cssMap;
   // public fields!: Field[];
   // public filterFields!: Field[];
   // public entities!: Entity[];
@@ -40,21 +53,22 @@ export class QueryBuilderComponent {
   //   category: ['=', '!=', 'in', 'not in'],
   //   boolean: ['=']
   // };
-  // @Input() disabled!: boolean;
-  // @Input() data: RuleSet = { condition: 'and', rules: [] };
+  disabled = input(false);
+  data = input<RuleSet>({ condition: 'and', rules: [], collapsed: false });
+  _data = signal<RuleSet>({ condition: 'and', rules: [], collapsed: false });
 
   // // For ControlValueAccessor interface
   // public onChangeCallback!: () => void;
   // public onTouchedCallback!: () => any;
 
   // @Input() allowRuleset = true;
-  // @Input() allowCollapse = false;
+  allowCollapse = input<boolean>(false);
   // @Input() emptyMessage = 'A ruleset cannot be empty. Please add a rule or remove it all together.';
   @Input() classNames!: { [key in QueryBuilderClassName]: string };
   // @Input() operatorMap!: { [key: string]: string[] };
   // @Input() parentValue!: RuleSet;
-  // @Input() config: QueryBuilderConfig = { fields: {} };
-  // @Input() parentArrowIconTemplate!: QueryArrowIconDirective;
+  config = input<QueryBuilderConfig>({ fields: {} });
+  parentArrowIconTemplate = input<QueryArrowIconDirective>();
   // @Input() parentInputTemplates!: QueryList<QueryInputDirective>;
   // @Input() parentOperatorTemplate!: QueryOperatorDirective;
   // @Input() parentFieldTemplate!: QueryFieldDirective;
@@ -67,7 +81,8 @@ export class QueryBuilderComponent {
   // @Input() parentTouchedCallback!: () => void;
   // @Input() persistValueOnFieldChange = false;
 
-  // @ViewChild('treeContainer', {static: true}) treeContainer!: ElementRef;
+  @ViewChild('treeContainer', { static: true })
+  treeContainer!: ElementRef;
 
   // @ContentChild(QueryButtonGroupDirective) buttonGroupTemplate!: QueryButtonGroupDirective;
   // @ContentChild(QuerySwitchGroupDirective) switchGroupTemplate!: QuerySwitchGroupDirective;
@@ -77,7 +92,8 @@ export class QueryBuilderComponent {
   // @ContentChild(QueryRemoveButtonDirective) removeButtonTemplate!: QueryRemoveButtonDirective;
   // @ContentChild(QueryEmptyWarningDirective) emptyWarningTemplate!: QueryEmptyWarningDirective;
   // @ContentChildren(QueryInputDirective) inputTemplates!: QueryList<QueryInputDirective>;
-  // @ContentChild(QueryArrowIconDirective) arrowIconTemplate!: QueryArrowIconDirective;
+  @ContentChild(QueryArrowIconDirective)
+  arrowIconTemplate!: QueryArrowIconDirective;
 
   // private defaultTemplateTypes: string[] = [
   //   'string', 'number', 'time', 'date', 'category', 'boolean', 'multiselect'];
@@ -93,40 +109,14 @@ export class QueryBuilderComponent {
   // private buttonGroupContext!: ButtonGroupContext;
 
   constructor(private changeDetectorRef: ChangeDetectorRef) {
-    this.defaultClassNames = {
-      arrowIconButton: 'q-arrow-icon-button',
-      arrowIcon: 'q-icon q-arrow-icon',
-      removeIcon: 'q-icon q-remove-icon',
-      addIcon: 'q-icon q-add-icon',
-      removeButtonSize: '',
-      switchControl: '',
-      switchRow: '',
-      button: 'q-button',
-      buttonGroup: 'q-button-group',
-      removeButton: 'q-remove-button',
-      switchGroup: 'q-switch-group',
-      switchLabel: 'q-switch-label',
-      switchRadio: 'q-switch-radio',
-      rightAlign: 'q-right-align',
-      transition: 'q-transition',
-      collapsed: 'q-collapsed',
-      treeContainer: 'q-tree-container',
-      tree: 'q-tree',
-      row: 'q-row',
-      connector: 'q-connector',
-      rule: 'q-rule',
-      ruleSet: 'q-ruleset',
-      invalidRuleSet: 'q-invalid-ruleset',
-      emptyWarning: 'q-empty-warning',
-      fieldControl: 'q-field-control',
-      fieldControlSize: 'q-control-size',
-      entityControl: 'q-entity-control',
-      entityControlSize: 'q-control-size',
-      operatorControl: 'q-operator-control',
-      operatorControlSize: 'q-control-size',
-      inputControl: 'q-input-control',
-      inputControlSize: 'q-control-size'
-    };
+    this.defaultClassNames = this.#cssMap;
+
+    effect(
+      () => {
+        this._data.update(() => this.data());
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   // ----------OnInit Implementation----------
@@ -215,9 +205,9 @@ export class QueryBuilderComponent {
 
   // // ----------END----------
 
-  // getDisabledState = (): boolean => {
-  //   return this.disabled;
-  // }
+  getDisabledState = (): boolean => {
+    return this.disabled();
+  };
 
   // findTemplateForRule(rule: Rule) {
   //   const type = this.getInputType(rule.field, rule.operator || 'is null');
@@ -273,37 +263,37 @@ export class QueryBuilderComponent {
   //   return operators;
   // }
 
-//   getFields(entity: string): Field[] {
-//     if (this.entities && entity) {
-//       return this.fields.filter((field) => {
-//         return field && field.entity === entity;
-//       });
-//     } else {
-//       return this.fields;
-//     }
-//   }
+  //   getFields(entity: string): Field[] {
+  //     if (this.entities && entity) {
+  //       return this.fields.filter((field) => {
+  //         return field && field.entity === entity;
+  //       });
+  //     } else {
+  //       return this.fields;
+  //     }
+  //   }
 
-//   getInputType(field: string, operator: string): string {
-//     if (this.config.getInputType) {
-//       return this.config.getInputType(field, operator);
-//     }
+  //   getInputType(field: string, operator: string): string {
+  //     if (this.config.getInputType) {
+  //       return this.config.getInputType(field, operator);
+  //     }
 
-//     if (!this.config.fields[field]) {
-//       throw new Error(`No configuration for field '${field}' could be found! Please add it to config.fields.`);
-//     }
+  //     if (!this.config.fields[field]) {
+  //       throw new Error(`No configuration for field '${field}' could be found! Please add it to config.fields.`);
+  //     }
 
-//     const type = this.config.fields[field].type;
-//     switch (operator) {
-//       case 'is null':
-//       case 'is not null':
-//         return 'is not null';  // No displayed component
-//       case 'in':
-//       case 'not in':
-//         return type === 'category' || type === 'boolean' ? 'multiselect' : type;
-//       default:
-//         return type;
-//     }
-//  }
+  //     const type = this.config.fields[field].type;
+  //     switch (operator) {
+  //       case 'is null':
+  //       case 'is not null':
+  //         return 'is not null';  // No displayed component
+  //       case 'in':
+  //       case 'not in':
+  //         return type === 'category' || type === 'boolean' ? 'multiselect' : type;
+  //       default:
+  //         return type;
+  //     }
+  //  }
 
   // getOptions(field: string): Option[] {
   //   if (this.config.getOptions) {
@@ -313,12 +303,16 @@ export class QueryBuilderComponent {
   // }
 
   getClassNames(...args: QueryBuilderClassName[]) {
-    const clsLookup = this.classNames ? this.classNames : this.defaultClassNames;
-    const classNames = args.map((id) => {
-      if (id in clsLookup || id in this.defaultClassNames)
-        return clsLookup[id] || this.defaultClassNames[id]
-      return []
-    }).filter((c) => !!c);
+    const clsLookup = this.classNames
+      ? this.classNames
+      : this.defaultClassNames;
+    const classNames = args
+      .map((id) => {
+        if (id in clsLookup || id in this.defaultClassNames)
+          return clsLookup[id] || this.defaultClassNames[id];
+        return [];
+      })
+      .filter((c) => !!c);
     return classNames.length ? classNames.join(' ') : null;
   }
 
@@ -436,19 +430,28 @@ export class QueryBuilderComponent {
   //   this.treeContainer.nativeElement.style.maxHeight = null;
   // }
 
-  // toggleCollapse(): void {
-  //   this.computedTreeContainerHeight();
-  //   setTimeout(() => {
-  //     this.data.collapsed = !this.data.collapsed;
-  //   }, 100);
-  // }
+  toggleCollapse(): void {
+    // this.computedTreeContainerHeight();
+    this._data.update((data) => {
+      data.collapsed = !data.collapsed;
+      return data;
+    });
+    console.log('toggleCollapse', this._data());
+    // setTimeout(() => {
+    //   this._data.update((data) => {
+    //     data.collapsed = !data.collapsed;
+    //     return data;
+    //   });
+    // }, 100);
+  }
 
-  // computedTreeContainerHeight(): void {
-  //   const nativeElement: HTMLElement = this.treeContainer.nativeElement;
-  //   if (nativeElement && nativeElement.firstElementChild) {
-  //     nativeElement.style.maxHeight = (nativeElement.firstElementChild.clientHeight + 8) + 'px';
-  //   }
-  // }
+  computedTreeContainerHeight(): void {
+    const nativeElement: HTMLElement = this.treeContainer.nativeElement;
+    if (nativeElement && nativeElement.firstElementChild) {
+      nativeElement.style.maxHeight =
+        nativeElement.firstElementChild.clientHeight + 8 + 'px';
+    }
+  }
 
   // changeCondition(value: string): void {
   //   if (this.disabled) {
@@ -573,10 +576,10 @@ export class QueryBuilderComponent {
   //   return (t ? t.template : null)!;
   // }
 
-  // getArrowIconTemplate(): TemplateRef<any> {
-  //   const t = this.parentArrowIconTemplate || this.arrowIconTemplate;
-  //   return (t ? t.template : null)!;
-  // }
+  getArrowIconTemplate(): TemplateRef<any> {
+    const t = this.parentArrowIconTemplate() || this.arrowIconTemplate;
+    return (t ? t.template : null)!;
+  }
 
   // getButtonGroupTemplate(): TemplateRef<any> {
   //   const t = this.parentButtonGroupTemplate || this.buttonGroupTemplate;
@@ -664,12 +667,12 @@ export class QueryBuilderComponent {
   //   };
   // }
 
-  // getArrowIconContext(): ArrowIconContext {
-  //   return {
-  //     getDisabledState: this.getDisabledState,
-  //     $implicit: this.data
-  //   };
-  // }
+  getArrowIconContext(): ArrowIconContext {
+    return {
+      getDisabledState: this.getDisabledState,
+      $implicit: this.data(),
+    };
+  }
 
   // getEmptyWarningContext(): EmptyWarningContext {
   //   return {
