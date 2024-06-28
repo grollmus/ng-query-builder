@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { QueryBuilderModule } from '@grollmus/ng-query-builder';
 
 @Component({
   standalone: true,
-  imports: [ RouterModule],
+  imports: [ RouterModule, QueryBuilderModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
 })
