@@ -1,4 +1,3 @@
-import { ValidationErrors } from '@angular/forms';
 
 export interface RuleSet {
   condition: string;
@@ -12,6 +11,7 @@ export interface Rule {
   value?: any;
   operator?: string;
   entity?: string;
+  rules?: Array<RuleSet | Rule>;
 }
 
 export interface Option {
@@ -51,40 +51,38 @@ export interface Entity {
   defaultField?: any;
 }
 
-export interface QueryBuilderClassNames {
-  arrowIconButton?: string;
-  arrowIcon?: string;
-  removeIcon?: string;
-  addIcon?: string;
-  button?: string;
-  buttonGroup?: string;
-  removeButton?: string;
-  removeButtonSize?: string;
-  switchRow?: string;
-  switchGroup?: string;
-  switchLabel?: string;
-  switchRadio?: string;
-  switchControl?: string;
-  rightAlign?: string;
-  transition?: string;
-  collapsed?: string;
-  treeContainer?: string;
-  tree?: string;
-  row?: string;
-  connector?: string;
-  rule?: string;
-  ruleSet?: string;
-  invalidRuleSet?: string;
-  emptyWarning?: string;
-  fieldControl?: string;
-  fieldControlSize?: string;
-  entityControl?: string;
-  entityControlSize?: string;
-  operatorControl?: string;
-  operatorControlSize?: string;
-  inputControl?: string;
-  inputControlSize?: string;
-}
+export type QueryBuilderClassName = 'arrowIconButton'
+                           | 'arrowIcon'
+                           | 'removeIcon'
+                           | 'addIcon'
+                           | 'button' 
+                           | 'buttonGroup' 
+                           | 'removeButton'  
+                           | 'removeButtonSize'
+                           | 'switchRow' 
+                           | 'switchGroup' 
+                           | 'switchLabel' 
+                           | 'switchRadio' 
+                           | 'switchControl' 
+                           | 'rightAlign' 
+                           | 'transition' 
+                           | 'collapsed' 
+                           | 'treeContainer' 
+                           | 'tree' 
+                           | 'row' 
+                           | 'connector' 
+                           | 'rule' 
+                           | 'ruleSet' 
+                           | 'invalidRuleSet' 
+                           | 'emptyWarning' 
+                           | 'fieldControl' 
+                           | 'fieldControlSize' 
+                           | 'entityControl' 
+                           | 'entityControlSize' 
+                           | 'operatorControl' 
+                           | 'operatorControlSize' 
+                           | 'inputControl' 
+                           | 'inputControlSize';
 
 export interface QueryBuilderConfig {
   fields: FieldMap;
