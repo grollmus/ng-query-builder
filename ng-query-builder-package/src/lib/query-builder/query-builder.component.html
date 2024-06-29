@@ -22,7 +22,7 @@ Hello World
     </ng-container>
   </a>
 
-  <!-- <ng-container
+  <ng-container
     *ngIf="getButtonGroupTemplate() as template; else defaultButtonGroup"
   >
     <div [ngClass]="getClassNames('buttonGroup', 'rightAlign')">
@@ -30,9 +30,9 @@ Hello World
         *ngTemplateOutlet="template; context: getButtonGroupContext()"
       ></ng-container>
     </div>
-  </ng-container> -->
+  </ng-container>
 
-  <!-- <ng-template #defaultButtonGroup>
+  <ng-template #defaultButtonGroup>
     <div [ngClass]="getClassNames('buttonGroup', 'rightAlign')">
       <button
         type="button"
@@ -62,7 +62,7 @@ Hello World
         </button>
       </ng-container>
     </div>
-  </ng-template> -->
+  </ng-template>
 
   <!-- <ng-container
     *ngIf="getSwitchGroupTemplate() as template; else defaultSwitchGroup"
