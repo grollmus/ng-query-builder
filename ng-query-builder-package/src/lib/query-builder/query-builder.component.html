@@ -38,7 +38,7 @@ Hello World
         type="button"
         (click)="addRule()"
         [ngClass]="getClassNames('button')"
-        [disabled]="disabled"
+        [disabled]="disabled()"
       >
         <i [ngClass]="getClassNames('addIcon')"></i> Rule
       </button>
@@ -47,7 +47,7 @@ Hello World
         (click)="addRuleSet()"
         [ngClass]="getClassNames('button')"
         *ngIf="allowRuleset"
-        [disabled]="disabled"
+        [disabled]="disabled()"
       >
         <i [ngClass]="getClassNames('addIcon')"></i> Ruleset
       </button>
@@ -56,7 +56,7 @@ Hello World
           type="button"
           (click)="removeRuleSet()"
           [ngClass]="getClassNames('button', 'removeButton')"
-          [disabled]="disabled"
+          [disabled]="disabled()"
         >
           <i [ngClass]="getClassNames('removeIcon')"></i>
         </button>
