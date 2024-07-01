@@ -15,12 +15,15 @@ import {
 import {
   ArrowIconContext,
   ButtonGroupContext,
+  EmptyWarningContext,
+  Entity,
   EntityContext,
   Field,
   FieldContext,
   InputContext,
   LocalRuleMeta,
   OperatorContext,
+  Option,
   QueryBuilderClassName,
   QueryBuilderConfig,
   RemoveButtonContext,
@@ -33,6 +36,7 @@ import { cssMap } from './css.map';
 import { QueryButtonGroupDirective } from './query-button-group.directive';
 import { QuerySwitchGroupDirective } from './query-switch-group.directive';
 import { QueryRemoveButtonDirective } from './query-remove-button.directive';
+import { QueryEntityDirective } from './query-entity.directive';
 
 export const CONTROL_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
@@ -56,7 +60,7 @@ export class QueryBuilderComponent {
   #cssMap = cssMap;
   fields!: Field[];
   // public filterFields!: Field[];
-  // public entities!: Entity[];
+  entities: Entity[] = [];
   defaultClassNames: { [key in QueryBuilderClassName]: string };
   defaultOperatorMap: { [key: string]: string[] } = {
     string: ['=', '!=', 'contains', 'like'],
@@ -76,7 +80,8 @@ export class QueryBuilderComponent {
 
   @Input() allowRuleset = true;
   allowCollapse = input<boolean>(false);
-  // @Input() emptyMessage = 'A ruleset cannot be empty. Please add a rule or remove it all together.';
+  @Input() emptyMessage =
+    'A ruleset cannot be empty. Please add a rule or remove it all together.';
   @Input() classNames!: { [key in QueryBuilderClassName]: string };
   @Input() operatorMap!: { [key: string]: string[] };
   @Input() parentValue!: RuleSet;
@@ -86,14 +91,14 @@ export class QueryBuilderComponent {
   // @Input() parentInputTemplates!: QueryList<QueryInputDirective>;
   // @Input() parentOperatorTemplate!: QueryOperatorDirective;
   // @Input() parentFieldTemplate!: QueryFieldDirective;
-  // @Input() parentEntityTemplate!: QueryEntityDirective;
+  @Input() parentEntityTemplate!: QueryEntityDirective;
   @Input() parentSwitchGroupTemplate!: QuerySwitchGroupDirective;
   @Input() parentButtonGroupTemplate!: QueryButtonGroupDirective;
   @Input() parentRemoveButtonTemplate!: QueryRemoveButtonDirective;
   // @Input() parentEmptyWarningTemplate!: QueryEmptyWarningDirective;
   @Input() parentChangeCallback!: () => void;
   @Input() parentTouchedCallback!: () => void;
-  // @Input() persistValueOnFieldChange = false;
+  @Input() persistValueOnFieldChange = false;
 
   @ViewChild('treeContainer', { static: true })
   treeContainer!: ElementRef;
@@ -103,7 +108,7 @@ export class QueryBuilderComponent {
   @ContentChild(QuerySwitchGroupDirective)
   switchGroupTemplate!: QuerySwitchGroupDirective;
   // @ContentChild(QueryFieldDirective) fieldTemplate!: QueryFieldDirective;
-  // @ContentChild(QueryEntityDirective) entityTemplate!: QueryEntityDirective;
+  @ContentChild(QueryEntityDirective) entityTemplate!: QueryEntityDirective;
   // @ContentChild(QueryOperatorDirective) operatorTemplate!: QueryOperatorDirective;
   @ContentChild(QueryRemoveButtonDirective)
   removeButtonTemplate!: QueryRemoveButtonDirective;
@@ -114,8 +119,13 @@ export class QueryBuilderComponent {
 
   // private defaultTemplateTypes: string[] = [
   //   'string', 'number', 'time', 'date', 'category', 'boolean', 'multiselect'];
-  // private defaultPersistValueTypes: string[] = [
-  //   'string', 'number', 'time', 'date', 'boolean'];
+  private defaultPersistValueTypes: string[] = [
+    'string',
+    'number',
+    'time',
+    'date',
+    'boolean',
+  ];
   private defaultEmptyList: any[] = [];
   private operatorsCache!: { [key: string]: string[] };
   private inputContextCache = new Map<Rule, InputContext>();
@@ -285,44 +295,46 @@ export class QueryBuilderComponent {
     return operators;
   }
 
-  //   getFields(entity: string): Field[] {
-  //     if (this.entities && entity) {
-  //       return this.fields.filter((field) => {
-  //         return field && field.entity === entity;
-  //       });
-  //     } else {
-  //       return this.fields;
-  //     }
-  //   }
+  getFields(entity: string): Field[] {
+    if (this.entities && entity) {
+      return this.fields.filter((field) => {
+        return field && field.entity === entity;
+      });
+    } else {
+      return this.fields;
+    }
+  }
 
-  //   getInputType(field: string, operator: string): string {
-  //     if (this.config.getInputType) {
-  //       return this.config.getInputType(field, operator);
-  //     }
+  getInputType(field: string, operator: string): string {
+    if (this._config.getInputType) {
+      return this._config.getInputType(field, operator);
+    }
 
-  //     if (!this.config.fields[field]) {
-  //       throw new Error(`No configuration for field '${field}' could be found! Please add it to config.fields.`);
-  //     }
+    if (!this._config.fields[field]) {
+      throw new Error(
+        `No configuration for field '${field}' could be found! Please add it to config.fields.`
+      );
+    }
 
-  //     const type = this.config.fields[field].type;
-  //     switch (operator) {
-  //       case 'is null':
-  //       case 'is not null':
-  //         return 'is not null';  // No displayed component
-  //       case 'in':
-  //       case 'not in':
-  //         return type === 'category' || type === 'boolean' ? 'multiselect' : type;
-  //       default:
-  //         return type;
-  //     }
-  //  }
+    const type = this._config.fields[field].type;
+    switch (operator) {
+      case 'is null':
+      case 'is not null':
+        return 'is not null'; // No displayed component
+      case 'in':
+      case 'not in':
+        return type === 'category' || type === 'boolean' ? 'multiselect' : type;
+      default:
+        return type;
+    }
+  }
 
-  // getOptions(field: string): Option[] {
-  //   if (this.config.getOptions) {
-  //     return this.config.getOptions(field);
-  //   }
-  //   return this.config.fields[field].options || this.defaultEmptyList;
-  // }
+  getOptions(field: string): Option[] {
+    if (this._config.getOptions) {
+      return this._config.getOptions(field);
+    }
+    return this._config.fields[field].options || this.defaultEmptyList;
+  }
 
   getClassNames(...args: QueryBuilderClassName[]) {
     const clsLookup = this.classNames
@@ -338,24 +350,26 @@ export class QueryBuilderComponent {
     return classNames.length ? classNames.join(' ') : null;
   }
 
-  // getDefaultField(entity: Entity): Field | null {
-  //   if (!entity) {
-  //     return null;
-  //   } else if (entity.defaultField !== undefined) {
-  //     return this.getDefaultValue(entity.defaultField);
-  //   } else {
-  //     const entityFields = this.fields.filter((field) => {
-  //       return field && field.entity === entity.value;
-  //     });
-  //     if (entityFields && entityFields.length) {
-  //       return entityFields[0];
-  //     } else {
-  //       console.warn(`No fields found for entity '${entity.name}'. ` +
-  //         `A 'defaultOperator' is also not specified on the field config. Operator value will default to null.`);
-  //       return null;
-  //     }
-  //   }
-  // }
+  getDefaultField(entity: Entity): Field | null {
+    if (!entity) {
+      return null;
+    } else if (entity.defaultField !== undefined) {
+      return this.getDefaultValue(entity.defaultField);
+    } else {
+      const entityFields = this.fields.filter((field) => {
+        return field && field.entity === entity.value;
+      });
+      if (entityFields && entityFields.length) {
+        return entityFields[0];
+      } else {
+        console.warn(
+          `No fields found for entity '${entity.name}'. ` +
+            `A 'defaultOperator' is also not specified on the field config. Operator value will default to null.`
+        );
+        return null;
+      }
+    }
+  }
 
   getDefaultOperator(field: Field) {
     if (field && field.defaultOperator !== undefined) {
@@ -494,94 +508,114 @@ export class QueryBuilderComponent {
     this.handleDataChange();
   }
 
-  // changeOperator(rule: Rule): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
+  changeOperator(rule: Rule): void {
+    if (this.disabled()) {
+      return;
+    }
 
-  //   if (this.config.coerceValueForOperator) {
-  //     rule.value = this.config.coerceValueForOperator(rule.operator as string, rule.value, rule);
-  //   } else {
-  //     rule.value = this.coerceValueForOperator(rule.operator as string, rule.value, rule);
-  //   }
+    if (this._config.coerceValueForOperator) {
+      rule.value = this._config.coerceValueForOperator(
+        rule.operator as string,
+        rule.value,
+        rule
+      );
+    } else {
+      rule.value = this.coerceValueForOperator(
+        rule.operator as string,
+        rule.value,
+        rule
+      );
+    }
 
-  //   this.handleTouched();
-  //   this.handleDataChange();
-  // }
+    this.handleTouched();
+    this.handleDataChange();
+  }
 
-  // coerceValueForOperator(operator: string, value: any, rule: Rule): any {
-  //   const inputType: string = this.getInputType(rule.field, operator);
-  //   if (inputType === 'multiselect' && !Array.isArray(value)) {
-  //     return [value];
-  //   }
-  //   return value;
-  // }
+  coerceValueForOperator(operator: string, value: any, rule: Rule): any {
+    const inputType: string = this.getInputType(rule.field, operator);
+    if (inputType === 'multiselect' && !Array.isArray(value)) {
+      return [value];
+    }
+    return value;
+  }
 
-  // changeInput(): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
+  changeInput(): void {
+    if (this.disabled()) {
+      return;
+    }
 
-  //   this.handleTouched();
-  //   this.handleDataChange();
-  // }
+    this.handleTouched();
+    this.handleDataChange();
+  }
 
-  // changeField(fieldValue: string, rule: Rule): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
+  changeField(fieldValue: string, rule: Rule): void {
+    if (this.disabled()) {
+      return;
+    }
 
-  //   const inputContext = this.inputContextCache.get(rule);
-  //   const currentField = inputContext && inputContext.field;
+    const inputContext = this.inputContextCache.get(rule);
+    const currentField = inputContext && inputContext.field;
 
-  //   const nextField: Field = this.config.fields[fieldValue];
+    const nextField: Field = this._config.fields[fieldValue];
 
-  //   const nextValue = this.calculateFieldChangeValue(
-  //     currentField as Field, nextField, rule.value);
+    const nextValue = this.calculateFieldChangeValue(
+      currentField as Field,
+      nextField,
+      rule.value
+    );
 
-  //   if (nextValue !== undefined) {
-  //     rule.value = nextValue;
-  //   } else {
-  //     delete rule.value;
-  //   }
+    if (nextValue !== undefined) {
+      rule.value = nextValue;
+    } else {
+      delete rule.value;
+    }
 
-  //   rule.operator = this.getDefaultOperator(nextField);
+    rule.operator = this.getDefaultOperator(nextField);
 
-  //   // Create new context objects so templates will automatically update
-  //   this.inputContextCache.delete(rule);
-  //   this.operatorContextCache.delete(rule);
-  //   this.fieldContextCache.delete(rule);
-  //   this.entityContextCache.delete(rule);
-  //   this.getInputContext(rule);
-  //   this.getFieldContext(rule);
-  //   this.getOperatorContext(rule);
-  //   this.getEntityContext(rule);
+    // Create new context objects so templates will automatically update
+    this.inputContextCache.delete(rule);
+    this.operatorContextCache.delete(rule);
+    this.fieldContextCache.delete(rule);
+    this.entityContextCache.delete(rule);
+    this.getInputContext(rule);
+    this.getFieldContext(rule);
+    this.getOperatorContext(rule);
+    this.getEntityContext(rule);
 
-  //   this.handleTouched();
-  //   this.handleDataChange();
-  // }
+    this.handleTouched();
+    this.handleDataChange();
+  }
 
-  // changeEntity(entityValue: string, rule: Rule, index: number, data: RuleSet): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
-  //   let i = index;
-  //   let rs = data;
-  //   const entity: Entity = this.entities.find((e) => e.value === entityValue)!;
-  //   const defaultField: Field = this.getDefaultField(entity)!;
-  //   if (!rs) {
-  //     rs = this.data;
-  //     i = rs.rules.findIndex((x) => x === rule);
-  //   }
-  //   rule.field = defaultField.value!;
-  //   rs.rules[i] = rule;
-  //   if (defaultField) {
-  //     this.changeField(defaultField.value!, rule);
-  //   } else {
-  //     this.handleTouched();
-  //     this.handleDataChange();
-  //   }
-  // }
+  changeEntity(
+    entityValue: string,
+    rule: Rule | RuleSet,
+    index: number,
+    data: RuleSet
+  ): void {
+    if (this.disabled()) {
+      return;
+    }
+    let i = index;
+    let rs = data;
+    const entity: Entity = this.entities.find((e) => e.value === entityValue)!;
+    const defaultField: Field = this.getDefaultField(entity)!;
+    if (!rs) {
+      rs = this._data();
+      i = rs.rules.findIndex((x) => x === rule);
+    }
+    if (this.isRule(rule)) rule.field = defaultField.value!;
+    rs.rules[i] = rule;
+    if (defaultField) {
+      this.changeField(defaultField.value!, rule as Rule);
+    } else {
+      this.handleTouched();
+      this.handleDataChange();
+    }
+  }
+
+  giveRuleEntity(rule: Rule | RuleSet) {
+    return this.isRule(rule) ? rule.entity : '';
+  }
 
   getDefaultValue(defaultValue: any): any {
     switch (typeof defaultValue) {
@@ -602,10 +636,10 @@ export class QueryBuilderComponent {
   // return (t ? t.template : null)!;
   // }
 
-  // getEntityTemplate(): TemplateRef<any> {
-  //   const t = this.parentEntityTemplate || this.entityTemplate;
-  //   return (t ? t.template : null)!;
-  // }
+  getEntityTemplate(): TemplateRef<any> {
+    const t = this.parentEntityTemplate || this.entityTemplate;
+    return (t ? t.template : null)!;
+  }
 
   getArrowIconTemplate(): TemplateRef<any> {
     const t = this.parentArrowIconTemplate() || this.arrowIconTemplate;
@@ -678,30 +712,30 @@ export class QueryBuilderComponent {
     return this.removeButtonContextCache.get(rule)!;
   }
 
-  // getFieldContext(rule: Rule): FieldContext {
-  //   if (!this.fieldContextCache.has(rule)) {
-  //     this.fieldContextCache.set(rule, {
-  //       onChange: this.changeField.bind(this),
-  //       getFields: this.getFields.bind(this),
-  //       getDisabledState: this.getDisabledState,
-  //       fields: this.fields,
-  //       $implicit: rule
-  //     });
-  //   }
-  //   return this.fieldContextCache.get(rule)!;
-  // }
+  getFieldContext(rule: Rule): FieldContext {
+    if (!this.fieldContextCache.has(rule)) {
+      this.fieldContextCache.set(rule, {
+        onChange: this.changeField.bind(this),
+        getFields: this.getFields.bind(this),
+        getDisabledState: this.getDisabledState,
+        fields: this.fields,
+        $implicit: rule,
+      });
+    }
+    return this.fieldContextCache.get(rule)!;
+  }
 
-  // // getEntityContext(rule: Rule): EntityContext {
-  // //   if (!this.entityContextCache.has(rule)) {
-  // //     this.entityContextCache.set(rule, {
-  // //       onChange: this.changeEntity.bind(this),
-  // //       getDisabledState: this.getDisabledState,
-  // //       entities: this.entities,
-  // //       $implicit: rule
-  // //     });
-  // //   }
-  // //   return this.entityContextCache.get(rule)!;
-  // // }
+  getEntityContext(rule: Rule | RuleSet): EntityContext {
+    if (this.isRule(rule) && !this.entityContextCache.has(rule)) {
+      this.entityContextCache.set(rule, {
+        onChange: () => this.changeEntity.bind(this),
+        getDisabledState: this.getDisabledState,
+        entities: this.entities,
+        $implicit: rule,
+      });
+    }
+    return this.entityContextCache.get(rule as Rule)!;
+  }
 
   getSwitchGroupContext(): SwitchGroupContext {
     return {
@@ -718,68 +752,72 @@ export class QueryBuilderComponent {
     };
   }
 
-  // getEmptyWarningContext(): EmptyWarningContext {
-  //   return {
-  //     getDisabledState: this.getDisabledState,
-  //     message: this.emptyMessage,
-  //     $implicit: this.data
-  //   };
-  // }
+  getEmptyWarningContext(): EmptyWarningContext {
+    return {
+      getDisabledState: this.getDisabledState,
+      message: this.emptyMessage,
+      $implicit: this._data(),
+    };
+  }
 
-  // // getOperatorContext(rule: Rule): OperatorContext {
-  // //   if (!this.operatorContextCache.has(rule)) {
-  // //     this.operatorContextCache.set(rule, {
-  // //       onChange: this.changeOperator.bind(this),
-  // //       getDisabledState: this.getDisabledState,
-  // //       operators: this.getOperators(rule.field),
-  // //       $implicit: rule
-  // //     });
-  // //   }
-  // //   return this.operatorContextCache.get(rule)!;
-  // // }
+  getOperatorContext(rule: Rule): OperatorContext {
+    if (!this.operatorContextCache.has(rule)) {
+      this.operatorContextCache.set(rule, {
+        onChange: () => this.changeOperator.bind(this),
+        getDisabledState: this.getDisabledState,
+        operators: this.getOperators(rule.field),
+        $implicit: rule,
+      });
+    }
+    return this.operatorContextCache.get(rule)!;
+  }
 
-  // getInputContext(rule: Rule): InputContext {
-  //   if (!this.inputContextCache.has(rule)) {
-  //     this.inputContextCache.set(rule, {
-  //       onChange: this.changeInput.bind(this),
-  //       getDisabledState: this.getDisabledState,
-  //       options: this.getOptions(rule.field),
-  //       field: this.config.fields[rule.field],
-  //       $implicit: rule
-  //     });
-  //   }
-  //   return this.inputContextCache.get(rule)!;
-  // }
+  getInputContext(rule: Rule): InputContext {
+    if (!this.inputContextCache.has(rule)) {
+      this.inputContextCache.set(rule, {
+        onChange: this.changeInput.bind(this),
+        getDisabledState: this.getDisabledState,
+        options: this.getOptions(rule.field),
+        field: this._config.fields[rule.field],
+        $implicit: rule,
+      });
+    }
+    return this.inputContextCache.get(rule)!;
+  }
 
-  // private calculateFieldChangeValue(
-  //   currentField: Field,
-  //   nextField: Field,
-  //   currentValue: any
-  // ): any {
+  private calculateFieldChangeValue(
+    currentField: Field,
+    nextField: Field,
+    currentValue: any
+  ): any {
+    if (this._config.calculateFieldChangeValue != null) {
+      return this._config.calculateFieldChangeValue(
+        currentField,
+        nextField,
+        currentValue
+      );
+    }
 
-  //   if (this.config.calculateFieldChangeValue != null) {
-  //     return this.config.calculateFieldChangeValue(
-  //       currentField, nextField, currentValue);
-  //   }
+    const canKeepValue = () => {
+      if (currentField == null || nextField == null) {
+        return false;
+      }
+      return (
+        currentField.type === nextField.type &&
+        this.defaultPersistValueTypes.indexOf(currentField.type) !== -1
+      );
+    };
 
-  //   const canKeepValue = () => {
-  //     if (currentField == null || nextField == null) {
-  //       return false;
-  //     }
-  //     return currentField.type === nextField.type
-  //       && this.defaultPersistValueTypes.indexOf(currentField.type) !== -1;
-  //   };
+    if (this.persistValueOnFieldChange && canKeepValue()) {
+      return currentValue;
+    }
 
-  //   if (this.persistValueOnFieldChange && canKeepValue()) {
-  //     return currentValue;
-  //   }
+    if (nextField && nextField.defaultValue !== undefined) {
+      return this.getDefaultValue(nextField.defaultValue);
+    }
 
-  //   if (nextField && nextField.defaultValue !== undefined) {
-  //     return this.getDefaultValue(nextField.defaultValue);
-  //   }
-
-  //   return undefined;
-  // }
+    return undefined;
+  }
 
   // // private checkEmptyRuleInRuleset(ruleset: RuleSet): boolean {
   // //   if (!ruleset || !ruleset.rules || ruleset.rules.length === 0) {

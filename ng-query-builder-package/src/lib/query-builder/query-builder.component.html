@@ -162,7 +162,7 @@ Hello World
               </div>
             </ng-template>
 
-            <!-- <div *ngIf="entities?.length > 0" class="q-inline-block-display">
+            <div *ngIf="entities.length > 0" class="q-inline-block-display">
               <ng-container
                 *ngIf="getEntityTemplate() as template; else defaultEntity"
               >
@@ -174,11 +174,10 @@ Hello World
 
             <ng-template #defaultEntity>
               <div [ngClass]="getClassNames('entityControlSize')">
+                <!-- [(ngModel)]="rule.entity" (ngModelChange)="changeEntity($event, rule, i, _data())" -->
                 <select
                   [ngClass]="getClassNames('entityControl')"
-                  [(ngModel)]="rule.entity"
-                  (ngModelChange)="changeEntity($event, rule, i, data)"
-                  [disabled]="disabled"
+                  [disabled]="disabled()"
                 >
                   <option
                     *ngFor="let entity of entities"
@@ -190,7 +189,7 @@ Hello World
               </div>
             </ng-template>
 
-            <ng-container
+            <!-- <ng-container
               *ngIf="getFieldTemplate() as template; else defaultField"
             >
               <ng-container
