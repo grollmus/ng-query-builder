@@ -15,14 +15,24 @@ import {
 import {
   ArrowIconContext,
   ButtonGroupContext,
+  EntityContext,
   Field,
+  FieldContext,
+  InputContext,
+  LocalRuleMeta,
+  OperatorContext,
   QueryBuilderClassName,
   QueryBuilderConfig,
+  RemoveButtonContext,
+  Rule,
   RuleSet,
+  SwitchGroupContext,
 } from './query-builder.interfaces';
 import { QueryArrowIconDirective } from './query-arrow-icon.directive';
 import { cssMap } from './css.map';
 import { QueryButtonGroupDirective } from './query-button-group.directive';
+import { QuerySwitchGroupDirective } from './query-switch-group.directive';
+import { QueryRemoveButtonDirective } from './query-remove-button.directive';
 
 export const CONTROL_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
@@ -77,9 +87,9 @@ export class QueryBuilderComponent {
   // @Input() parentOperatorTemplate!: QueryOperatorDirective;
   // @Input() parentFieldTemplate!: QueryFieldDirective;
   // @Input() parentEntityTemplate!: QueryEntityDirective;
-  // @Input() parentSwitchGroupTemplate!: QuerySwitchGroupDirective;
+  @Input() parentSwitchGroupTemplate!: QuerySwitchGroupDirective;
   @Input() parentButtonGroupTemplate!: QueryButtonGroupDirective;
-  // @Input() parentRemoveButtonTemplate!: QueryRemoveButtonDirective;
+  @Input() parentRemoveButtonTemplate!: QueryRemoveButtonDirective;
   // @Input() parentEmptyWarningTemplate!: QueryEmptyWarningDirective;
   @Input() parentChangeCallback!: () => void;
   @Input() parentTouchedCallback!: () => void;
@@ -90,11 +100,13 @@ export class QueryBuilderComponent {
 
   @ContentChild(QueryButtonGroupDirective)
   buttonGroupTemplate!: QueryButtonGroupDirective;
-  // @ContentChild(QuerySwitchGroupDirective) switchGroupTemplate!: QuerySwitchGroupDirective;
+  @ContentChild(QuerySwitchGroupDirective)
+  switchGroupTemplate!: QuerySwitchGroupDirective;
   // @ContentChild(QueryFieldDirective) fieldTemplate!: QueryFieldDirective;
   // @ContentChild(QueryEntityDirective) entityTemplate!: QueryEntityDirective;
   // @ContentChild(QueryOperatorDirective) operatorTemplate!: QueryOperatorDirective;
-  // @ContentChild(QueryRemoveButtonDirective) removeButtonTemplate!: QueryRemoveButtonDirective;
+  @ContentChild(QueryRemoveButtonDirective)
+  removeButtonTemplate!: QueryRemoveButtonDirective;
   // @ContentChild(QueryEmptyWarningDirective) emptyWarningTemplate!: QueryEmptyWarningDirective;
   // @ContentChildren(QueryInputDirective) inputTemplates!: QueryList<QueryInputDirective>;
   @ContentChild(QueryArrowIconDirective)
@@ -106,11 +118,11 @@ export class QueryBuilderComponent {
   //   'string', 'number', 'time', 'date', 'boolean'];
   private defaultEmptyList: any[] = [];
   private operatorsCache!: { [key: string]: string[] };
-  // private inputContextCache = new Map<Rule, InputContext>();
-  // private operatorContextCache = new Map<Rule, OperatorContext>();
-  // private fieldContextCache = new Map<Rule, FieldContext>();
-  // private entityContextCache = new Map<Rule, EntityContext>();
-  // private removeButtonContextCache = new Map<Rule, RemoveButtonContext>();
+  private inputContextCache = new Map<Rule, InputContext>();
+  private operatorContextCache = new Map<Rule, OperatorContext>();
+  private fieldContextCache = new Map<Rule, FieldContext>();
+  private entityContextCache = new Map<Rule, EntityContext>();
+  private removeButtonContextCache = new Map<Rule, RemoveButtonContext>();
   private buttonGroupContext!: ButtonGroupContext;
 
   constructor(private changeDetectorRef: ChangeDetectorRef) {
@@ -384,26 +396,28 @@ export class QueryBuilderComponent {
     this.handleDataChange();
   }
 
-  // removeRule(rule: Rule, parent?: RuleSet): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
+  removeRule(rule: Rule | RuleSet, parent?: RuleSet): void {
+    if (this.disabled() && !this.isRule(rule)) {
+      return;
+    }
 
-  //   parent = parent || this.data;
-  //   if (this.config.removeRule) {
-  //     this.config.removeRule(rule, parent);
-  //   } else {
-  //     parent.rules = parent.rules.filter((r) => r !== rule);
-  //   }
-  //   this.inputContextCache.delete(rule);
-  //   this.operatorContextCache.delete(rule);
-  //   this.fieldContextCache.delete(rule);
-  //   this.entityContextCache.delete(rule);
-  //   this.removeButtonContextCache.delete(rule);
+    parent = parent || this._data();
+    if (this._config.removeRule && this.isRule(rule)) {
+      this._config.removeRule(rule, parent);
+    } else {
+      parent.rules = parent.rules.filter((r) => r !== rule);
+    }
+    if (this.isRule(rule)) {
+      this.inputContextCache.delete(rule);
+      this.operatorContextCache.delete(rule);
+      this.fieldContextCache.delete(rule);
+      this.entityContextCache.delete(rule);
+      this.removeButtonContextCache.delete(rule);
+    }
 
-  //   this.handleTouched();
-  //   this.handleDataChange();
-  // }
+    this.handleTouched();
+    this.handleDataChange();
+  }
 
   addRuleSet(parent?: RuleSet): void {
     if (this.disabled()) {
@@ -428,7 +442,7 @@ export class QueryBuilderComponent {
       return;
     }
 
-    ruleset = ruleset! || this.data!;
+    ruleset = ruleset! || this._data()!;
     parent = parent || this.parentValue;
     if (this._config.removeRuleSet) {
       this._config.removeRuleSet(ruleset, parent);
@@ -467,15 +481,18 @@ export class QueryBuilderComponent {
     }
   }
 
-  // changeCondition(value: string): void {
-  //   if (this.disabled) {
-  //     return;
-  //   }
+  changeCondition(value: string): void {
+    if (this.disabled()) {
+      return;
+    }
 
-  //   this.data.condition = value;
-  //   this.handleTouched();
-  //   this.handleDataChange();
-  // }
+    this._data.update((data) => {
+      data.condition = value;
+      return data;
+    });
+    this.handleTouched();
+    this.handleDataChange();
+  }
 
   // changeOperator(rule: Rule): void {
   //   if (this.disabled) {
@@ -600,29 +617,29 @@ export class QueryBuilderComponent {
     return (t ? t.template : null)!;
   }
 
-  // getSwitchGroupTemplate(): TemplateRef<any> | null {
-  //   const t = this.parentSwitchGroupTemplate || this.switchGroupTemplate;
-  //   return t ? t.template : null;
-  // }
+  getSwitchGroupTemplate(): TemplateRef<any> | null {
+    const t = this.parentSwitchGroupTemplate || this.switchGroupTemplate;
+    return t ? t.template : null;
+  }
 
-  // getRemoveButtonTemplate(): TemplateRef<any> {
-  //   const t = this.parentRemoveButtonTemplate || this.removeButtonTemplate;
-  //   return (t ? t.template : null)!;
-  // }
+  getRemoveButtonTemplate(): TemplateRef<any> {
+    const t = this.parentRemoveButtonTemplate || this.removeButtonTemplate;
+    return (t ? t.template : null)!;
+  }
 
   // getEmptyWarningTemplate(): TemplateRef<any> {
   //   const t = this.parentEmptyWarningTemplate || this.emptyWarningTemplate;
   //   return (t ? t.template : null)!;
   // }
 
-  // getQueryItemClassName(local: LocalRuleMeta): string {
-  //   let cls = this.getClassNames('row', 'connector', 'transition');
-  //   cls += ' ' + this.getClassNames(local.ruleset ? 'ruleSet' : 'rule');
-  //   if (local.invalid) {
-  //     cls += ' ' + this.getClassNames('invalidRuleSet');
-  //   }
-  //   return cls!;
-  // }
+  getQueryItemClassName(local: LocalRuleMeta): string {
+    let cls = this.getClassNames('row', 'connector', 'transition');
+    cls += ' ' + this.getClassNames(local.ruleset ? 'ruleSet' : 'rule');
+    if (local.invalid) {
+      cls += ' ' + this.getClassNames('invalidRuleSet');
+    }
+    return cls!;
+  }
 
   getButtonGroupContext(): ButtonGroupContext {
     if (!this.buttonGroupContext) {
@@ -644,16 +661,22 @@ export class QueryBuilderComponent {
     return this.buttonGroupContext;
   }
 
-  // getRemoveButtonContext(rule: Rule): RemoveButtonContext {
-  //   if (!this.removeButtonContextCache.has(rule)) {
-  //     this.removeButtonContextCache.set(rule, {
-  //       removeRule: this.removeRule.bind(this),
-  //       getDisabledState: this.getDisabledState,
-  //       $implicit: rule
-  //     });
-  //   }
-  //   return this.removeButtonContextCache.get(rule)!;
-  // }
+  isRule(rule: Rule | RuleSet): rule is Rule {
+    return (rule as Rule).field !== undefined;
+  }
+
+  getRemoveButtonContext(rule: Rule | RuleSet): RemoveButtonContext {
+    if (this.isRule(rule) && !this.removeButtonContextCache.has(rule)) {
+      this.removeButtonContextCache.set(rule, {
+        removeRule: this.removeRule.bind(this),
+        getDisabledState: this.getDisabledState,
+        $implicit: rule,
+      });
+    } else {
+      rule = { field: '' } as Rule;
+    }
+    return this.removeButtonContextCache.get(rule)!;
+  }
 
   // getFieldContext(rule: Rule): FieldContext {
   //   if (!this.fieldContextCache.has(rule)) {
@@ -680,18 +703,18 @@ export class QueryBuilderComponent {
   // //   return this.entityContextCache.get(rule)!;
   // // }
 
-  // getSwitchGroupContext(): SwitchGroupContext {
-  //   return {
-  //     onChange: this.changeCondition.bind(this),
-  //     getDisabledState: this.getDisabledState,
-  //     $implicit: this.data
-  //   };
-  // }
+  getSwitchGroupContext(): SwitchGroupContext {
+    return {
+      onChange: this.changeCondition.bind(this),
+      getDisabledState: this.getDisabledState,
+      $implicit: this._data(),
+    };
+  }
 
   getArrowIconContext(): ArrowIconContext {
     return {
       getDisabledState: this.getDisabledState,
-      $implicit: this.data(),
+      $implicit: this._data(),
     };
   }
 

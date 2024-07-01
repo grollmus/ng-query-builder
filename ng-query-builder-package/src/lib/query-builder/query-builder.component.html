@@ -64,62 +64,71 @@ Hello World
     </div>
   </ng-template>
 
-  <!-- <ng-container
+  <ng-container
     *ngIf="getSwitchGroupTemplate() as template; else defaultSwitchGroup"
   >
     <ng-container
       *ngTemplateOutlet="template; context: getSwitchGroupContext()"
     ></ng-container>
-  </ng-container> -->
+  </ng-container>
 
-  <!-- <ng-template #defaultSwitchGroup>
+  <ng-template #defaultSwitchGroup>
     <div [ngClass]="getClassNames('switchGroup', 'transition')" *ngIf="data">
       <div [ngClass]="getClassNames('switchControl')">
         <input
           type="radio"
           [ngClass]="getClassNames('switchRadio')"
-          [(ngModel)]="data.condition"
-          [disabled]="disabled"
+          [(ngModel)]="_data().condition"
+          [disabled]="disabled()"
           value="and"
           #andOption
         />
         <label
           (click)="changeCondition(andOption.value)"
           [ngClass]="getClassNames('switchLabel')"
-          >AND</label
         >
+          AND
+        </label>
       </div>
       <div [ngClass]="getClassNames('switchControl')">
         <input
           type="radio"
           [ngClass]="getClassNames('switchRadio')"
-          [(ngModel)]="data.condition"
-          [disabled]="disabled"
+          [(ngModel)]="_data().condition"
+          [disabled]="disabled()"
           value="or"
           #orOption
         />
         <label
           (click)="changeCondition(orOption.value)"
           [ngClass]="getClassNames('switchLabel')"
-          >OR</label
         >
+          OR
+        </label>
       </div>
     </div>
-  </ng-template> -->
+  </ng-template>
 </div>
 
-<!-- <div
+<div
   #treeContainer
   (transitionend)="transitionEnd($event)"
-  [ngClass]="getClassNames('treeContainer', data.collapsed ? 'collapsed' : '')"
+  [ngClass]="
+    getClassNames(
+      'treeContainer',
+      _data().collapsed ? 'collapsed' : 'clear-dummy'
+    )
+  "
 >
-  <ul [ngClass]="getClassNames('tree')" *ngIf="data && data.rules">
-    <ng-container *ngFor="let rule of data.rules; let i = index">
+  <ul [ngClass]="getClassNames('tree')" *ngIf="_data() && _data().rules">
+    <ng-container *ngFor="let rule of _data().rules; let i = index">
       <ng-container
         *ngIf="{
-          ruleset: !!rule.rules,
+          ruleset: !!rule.rules!,
           invalid:
-            !config.allowEmptyRulesets && rule.rules && rule.rules.length === 0
+            !_config.allowEmptyRulesets! &&
+            rule.rules! &&
+            rule.rules.length === 0
         } as local"
       >
         <li [ngClass]="getQueryItemClassName(local)">
@@ -145,15 +154,15 @@ Hello World
                 <button
                   type="button"
                   [ngClass]="getClassNames('button', 'removeButton')"
-                  (click)="removeRule(rule, data)"
-                  [disabled]="disabled"
+                  (click)="removeRule(rule, _data())"
+                  [disabled]="disabled()"
                 >
                   <i [ngClass]="getClassNames('removeIcon')"></i>
                 </button>
               </div>
             </ng-template>
 
-            <div *ngIf="entities?.length > 0" class="q-inline-block-display">
+            <!-- <div *ngIf="entities?.length > 0" class="q-inline-block-display">
               <ng-container
                 *ngIf="getEntityTemplate() as template; else defaultEntity"
               >
@@ -317,9 +326,9 @@ Hello World
                   type="checkbox"
                 />
               </div>
-            </ng-template>
+            </ng-template> -->
           </ng-container>
-          <query-builder
+          <!-- <query-builder
             *ngIf="local.ruleset"
             [data]="rule"
             [disabled]="disabled"
@@ -354,9 +363,9 @@ Hello World
             [emptyMessage]="emptyMessage"
             [operatorMap]="operatorMap"
           >
-          </query-builder>
+          </query-builder> -->
 
-          <ng-container
+          <!-- <ng-container
             *ngIf="
               getEmptyWarningTemplate() as template;
               else defaultEmptyWarning
@@ -367,15 +376,15 @@ Hello World
                 *ngTemplateOutlet="template; context: getEmptyWarningContext()"
               ></ng-container>
             </ng-container>
-          </ng-container>
+          </ng-container> -->
 
-          <ng-template #defaultEmptyWarning>
+          <!--  <ng-template #defaultEmptyWarning>
             <p [ngClass]="getClassNames('emptyWarning')" *ngIf="local.invalid">
               {{ emptyMessage }}
             </p>
-          </ng-template>
+          </ng-template> -->
         </li>
       </ng-container>
     </ng-container>
   </ul>
-</div> -->
+</div>
